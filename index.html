@@ -236,7 +236,7 @@ if (tg) {
   tg.expand();
 }
 
-// Запуск чата — КНОПКА
+// Запуск чата
 const welcome = document.getElementById("welcome");
 const startBtn = document.getElementById("startBtn");
 const chatContainer = document.getElementById("chat");
@@ -281,20 +281,20 @@ if (localStorage.getItem("theme") === "light") {
 themeToggle.onclick = toggleTheme;
 
 // ──────────────────────────────────────────────
-//     ОСНОВНАЯ ЛОГИКА ЧАТА (xAI Grok API)
+//     ОСНОВНАЯ ЛОГИКА ЧАТА — xAI Grok API
 // ──────────────────────────────────────────────
 const chat = document.getElementById("chat");
 const input = document.getElementById("input");
 const sendBtn = document.getElementById("sendBtn");
 
-const API_KEY = 'xai-M2UmFCvW7HW8bSdZiHRSL2dTrPyrfl9FRM1BuXaA9NaDjozbv1cv3xPblRjo3ZWilLQFgh8LKnZn9Jjf';
+const API_KEY = 'xai-PCZtAFvxAk4mwRmiMagLI9S5F0epwIhBkOakzuEhhftkG2uMm4krK39rDrsiJWJxgumYcoGZPoUharxY';
 const API_URL = 'https://api.x.ai/v1/chat/completions';
-const MODEL = 'grok-4-1-fast-reasoning';  // актуальная рабочая модель на 2026
+const MODEL = 'grok-4-1-fast-reasoning';  // Актуальная мощная модель (январь 2026)
 
 let messages = [
   {
     role: "system",
-    content: "Ты Grok — честный, остроумный и максимально полезный ИИ от xAI. Отвечай кратко, по делу, с лёгким сарказмом когда уместно."
+    content: "Ты Grok — честный, остроумный и максимально полезный ИИ от xAI. Отвечай кратко, по делу, с лёгким сарказмом когда уместно. Не льсти, не юли."
   }
 ];
 
@@ -345,7 +345,7 @@ async function send() {
 
     if (!res.ok) {
       const errText = await res.text();
-      throw new Error(`API: ${res.status} — ${errText}`);
+      throw new Error(`API ошибка: ${res.status} — ${errText}`);
     }
 
     const data = await res.json();
