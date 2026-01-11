@@ -228,14 +228,14 @@ const greetings = [
 ];
 document.getElementById("greeting").textContent = greetings[Math.floor(Math.random() * greetings.length)];
 
-// Telegram WebApp инициализация
+// Telegram WebApp
 const tg = window.Telegram?.WebApp;
 if (tg) {
   tg.ready();
   tg.expand();
 }
 
-// Запуск чата (кнопка должна работать)
+// Запуск чата
 const welcome = document.getElementById("welcome");
 const startBtn = document.getElementById("startBtn");
 const chatContainer = document.getElementById("chat");
@@ -280,10 +280,10 @@ if (localStorage.getItem("theme") === "light") {
 themeToggle.onclick = toggleTheme;
 
 // ──────────────────────────────────────────────
-//     ОСНОВНАЯ ЛОГИКА — Google Gemini API (актуально на 11 января 2026)
+//     ОСНОВНАЯ ЛОГИКА — Google Gemini API (новый ключ)
 // ──────────────────────────────────────────────
-const GEMINI_API_KEY = 'AIzaSyBvz_dCIncFCAjQFCCCj7OxGGYwTMNo2uA';
-const GEMINI_MODEL = 'gemini-2.0-flash';  // Рабочая модель прямо сейчас
+const GEMINI_API_KEY = 'AIzaSyAFpNP54125z30iKBx2oHuVeuQbUheqcas';
+const GEMINI_MODEL = 'gemini-2.0-flash';  // актуальная модель на 11 января 2026
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent`;
 
 let history = [];
@@ -333,7 +333,7 @@ async function send() {
 
     if (!res.ok) {
       const errText = await res.text();
-      throw new Error(`Gemini API ошибка: ${res.status} — ${errText}`);
+      throw new Error(`Gemini API: ${res.status} — ${errText}`);
     }
 
     const data = await res.json();
