@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>Grok AI Чат</title>
+  <title>Gemini AI Чат</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
@@ -90,7 +90,7 @@
     .avatar {
       width: 40px; height: 40px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #667eea, #764ba2);
+      background: linear-gradient(135deg, #4285F4, #34A853);
       margin-right: 12px;
     }
 
@@ -201,7 +201,7 @@
   <div class="header">
     <div class="avatar"></div>
     <div class="chat-info">
-      <div class="chat-name">Grok AI</div>
+      <div class="chat-name">Gemini AI</div>
       <div class="chat-status">онлайн</div>
     </div>
     <button class="theme-btn" id="themeToggle">☀️</button>
@@ -219,17 +219,16 @@
 <script>
 // Случайные приветствия
 const greetings = [
-  "Готов ответить максимально честно 😏",
-  "Привет! Что у тебя на уме?",
-  "Йо! Давай интересный разговор 🔥",
-  "Здравствуй! Чем помогу сегодня?",
-  "О, ты снова здесь — задавай вопросы!",
-  "Привет из xAI! Без воды, только суть",
-  "Хай! Сегодня особенно остроумный 😈"
+  "Привет! Готов отвечать быстро и по делу 😏",
+  "Йо! Что у тебя на уме сегодня?",
+  "Здравствуй! Задавай любой вопрос 🔥",
+  "Привет! Чем могу помочь?",
+  "О, ты здесь! Давай пообщаемся",
+  "Хай! Gemini на связи 😎"
 ];
 document.getElementById("greeting").textContent = greetings[Math.floor(Math.random() * greetings.length)];
 
-// Инициализация Telegram WebApp
+// Telegram WebApp
 const tg = window.Telegram?.WebApp;
 if (tg) {
   tg.ready();
@@ -253,12 +252,12 @@ startBtn.addEventListener('click', function(e) {
     chatContainer.style.display = "flex";
     inputWrapper.style.display = "block";
     
-    addMessage("Привет! Готов отвечать на любые вопросы 🚀", false);
+    addMessage("Привет! Я Gemini. Задавай любые вопросы 🚀", false);
     document.getElementById("input").focus();
   }, 700);
 });
 
-// Тема
+// Переключение темы
 const body = document.body;
 const themeToggle = document.getElementById("themeToggle");
 
@@ -281,22 +280,16 @@ if (localStorage.getItem("theme") === "light") {
 themeToggle.onclick = toggleTheme;
 
 // ──────────────────────────────────────────────
-//     ОСНОВНАЯ ЛОГИКА ЧАТА — xAI Grok API
+//     ОСНОВНАЯ ЛОГИКА — Google Gemini API
 // ──────────────────────────────────────────────
 const chat = document.getElementById("chat");
 const input = document.getElementById("input");
 const sendBtn = document.getElementById("sendBtn");
 
-const API_KEY = 'xai-KLnM08905tNVtOdTKGh72V68NvGsDbBftdzLGNJ2VLDywEVCqeVqbXX4dlQlzqqeKdCTCZlp4DN4TY7M';
-const API_URL = 'https://api.x.ai/v1/chat/completions';
-const MODEL = 'grok-4-1-fast-reasoning';  // ← если ошибка 403/404, попробуй 'grok-4' или 'grok-beta'
+const GEMINI_API_KEY = 'AIzaSyBvz_dCIncFCAjQFCCCj7OxGGYwTMNo2uA';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
-let messages = [
-  {
-    role: "system",
-    content: "Ты Grok — честный, остроумный и максимально полезный ИИ от xAI. Отвечай кратко, по делу, с лёгким сарказмом когда уместно."
-  }
-];
+let history = []; // для Gemini history в формате [{role: "user"/"model", parts: [{text: "..."}]}]
 
 function addMessage(text, isUser = false) {
   const div = document.createElement("div");
@@ -327,31 +320,31 @@ async function send() {
   const typing = showTyping();
 
   try {
-    messages.push({ role: "user", content: text });
+    // Добавляем сообщение пользователя в историю
+    history.push({ role: "user", parts: [{ text }] });
 
-    const res = await fetch(API_URL, {
+    const res = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${API_KEY}`
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: MODEL,
-        messages: messages,
-        temperature: 0.75,
-        max_tokens: 2048
+        contents: history,
+        generationConfig: {
+          temperature: 0.75,
+          maxOutputTokens: 2048
+        }
       })
     });
 
     if (!res.ok) {
       const errText = await res.text();
-      throw new Error(`API ошибка: ${res.status} — ${errText}`);
+      throw new Error(`Gemini API: ${res.status} — ${errText}`);
     }
 
     const data = await res.json();
-    const answer = data.choices?.[0]?.message?.content?.trim() || "…";
+    const answer = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "…";
 
-    messages.push({ role: "assistant", content: answer });
+    // Добавляем ответ модели в историю
+    history.push({ role: "model", parts: [{ text: answer }] });
 
     typing.remove();
     addMessage(answer);
