@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>Gemini AI Чат</title>
+  <title>Grok AI Чат</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
@@ -90,7 +90,7 @@
     .avatar {
       width: 40px; height: 40px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #4285F4, #34A853);
+      background: linear-gradient(135deg, #667eea, #764ba2);
       margin-right: 12px;
     }
 
@@ -201,7 +201,7 @@
   <div class="header">
     <div class="avatar"></div>
     <div class="chat-info">
-      <div class="chat-name">Gemini AI</div>
+      <div class="chat-name">Grok AI</div>
       <div class="chat-status">онлайн</div>
     </div>
     <button class="theme-btn" id="themeToggle">☀️</button>
@@ -219,12 +219,12 @@
 <script>
 // Случайные приветствия
 const greetings = [
-  "Привет! Готов отвечать быстро и по делу 😏",
-  "Йо! Что у тебя на уме сегодня?",
-  "Здравствуй! Задавай любой вопрос 🔥",
-  "Привет! Чем могу помочь?",
-  "О, ты здесь! Давай пообщаемся",
-  "Хай! Gemini на связи 😎"
+  "Готов ответить максимально честно 😏",
+  "Привет! Что у тебя на уме сегодня?",
+  "Йо! Давай интересный разговор 🔥",
+  "Здравствуй! Чем помогу?",
+  "О, ты снова здесь — задавай вопросы!",
+  "Привет из Groq! Без воды, только суть"
 ];
 document.getElementById("greeting").textContent = greetings[Math.floor(Math.random() * greetings.length)];
 
@@ -252,12 +252,12 @@ startBtn.addEventListener('click', function(e) {
     chatContainer.style.display = "flex";
     inputWrapper.style.display = "block";
     
-    addMessage("Привет! Я Gemini. Задавай любые вопросы 🚀", false);
+    addMessage("Привет! Я на Groq. Задавай любые вопросы 🚀", false);
     document.getElementById("input").focus();
   }, 700);
 });
 
-// Переключение темы
+// Тема
 const body = document.body;
 const themeToggle = document.getElementById("themeToggle");
 
@@ -280,13 +280,18 @@ if (localStorage.getItem("theme") === "light") {
 themeToggle.onclick = toggleTheme;
 
 // ──────────────────────────────────────────────
-//     ОСНОВНАЯ ЛОГИКА — Google Gemini API (новый ключ)
+//     ОСНОВНАЯ ЛОГИКА — Groq API (бесплатный tier)
 // ──────────────────────────────────────────────
-const GEMINI_API_KEY = 'AIzaSyAFpNP54125z30iKBx2oHuVeuQbUheqcas';
-const GEMINI_MODEL = 'gemini-2.0-flash';  // актуальная модель на 11 января 2026
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent`;
+const GROQ_API_KEY = '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';
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const MODEL = 'llama-3.3-70b-versatile';  // очень хорошая и быстрая модель
 
-let history = [];
+let messages = [
+  {
+    role: "system",
+    content: "Ты Grok — честный, остроумный и максимально полезный ИИ. Отвечай кратко, по делу, с лёгким сарказмом когда уместно."
+  }
+];
 
 function addMessage(text, isUser = false) {
   const div = document.createElement("div");
@@ -317,29 +322,31 @@ async function send() {
   const typing = showTyping();
 
   try {
-    history.push({ role: "user", parts: [{ text }] });
+    messages.push({ role: "user", content: text });
 
-    const res = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+    const res = await fetch(GROQ_API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${GROQ_API_KEY}`
+      },
       body: JSON.stringify({
-        contents: history,
-        generationConfig: {
-          temperature: 0.75,
-          maxOutputTokens: 2048
-        }
+        model: MODEL,
+        messages: messages,
+        temperature: 0.75,
+        max_tokens: 2048
       })
     });
 
     if (!res.ok) {
       const errText = await res.text();
-      throw new Error(`Gemini API: ${res.status} — ${errText}`);
+      throw new Error(`Groq API: ${res.status} — ${errText}`);
     }
 
     const data = await res.json();
-    const answer = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "…";
+    const answer = data.choices?.[0]?.message?.content?.trim() || "…";
 
-    history.push({ role: "model", parts: [{ text: answer }] });
+    messages.push({ role: "assistant", content: answer });
 
     typing.remove();
     addMessage(answer);
