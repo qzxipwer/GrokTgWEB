@@ -228,14 +228,14 @@ const greetings = [
 ];
 document.getElementById("greeting").textContent = greetings[Math.floor(Math.random() * greetings.length)];
 
-// Telegram WebApp
+// Telegram WebApp инициализация
 const tg = window.Telegram?.WebApp;
 if (tg) {
   tg.ready();
   tg.expand();
 }
 
-// Запуск чата
+// Запуск чата (кнопка должна работать)
 const welcome = document.getElementById("welcome");
 const startBtn = document.getElementById("startBtn");
 const chatContainer = document.getElementById("chat");
@@ -280,16 +280,13 @@ if (localStorage.getItem("theme") === "light") {
 themeToggle.onclick = toggleTheme;
 
 // ──────────────────────────────────────────────
-//     ОСНОВНАЯ ЛОГИКА — Google Gemini API
+//     ОСНОВНАЯ ЛОГИКА — Google Gemini API (актуально на 11 января 2026)
 // ──────────────────────────────────────────────
-const chat = document.getElementById("chat");
-const input = document.getElementById("input");
-const sendBtn = document.getElementById("sendBtn");
-
 const GEMINI_API_KEY = 'AIzaSyBvz_dCIncFCAjQFCCCj7OxGGYwTMNo2uA';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+const GEMINI_MODEL = 'gemini-2.0-flash';  // Рабочая модель прямо сейчас
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent`;
 
-let history = []; // для Gemini history в формате [{role: "user"/"model", parts: [{text: "..."}]}]
+let history = [];
 
 function addMessage(text, isUser = false) {
   const div = document.createElement("div");
@@ -320,7 +317,6 @@ async function send() {
   const typing = showTyping();
 
   try {
-    // Добавляем сообщение пользователя в историю
     history.push({ role: "user", parts: [{ text }] });
 
     const res = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
@@ -337,13 +333,12 @@ async function send() {
 
     if (!res.ok) {
       const errText = await res.text();
-      throw new Error(`Gemini API: ${res.status} — ${errText}`);
+      throw new Error(`Gemini API ошибка: ${res.status} — ${errText}`);
     }
 
     const data = await res.json();
     const answer = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "…";
 
-    // Добавляем ответ модели в историю
     history.push({ role: "model", parts: [{ text: answer }] });
 
     typing.remove();
