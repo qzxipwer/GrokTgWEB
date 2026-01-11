@@ -287,14 +287,14 @@ const chat = document.getElementById("chat");
 const input = document.getElementById("input");
 const sendBtn = document.getElementById("sendBtn");
 
-const API_KEY = 'xai-PCZtAFvxAk4mwRmiMagLI9S5F0epwIhBkOakzuEhhftkG2uMm4krK39rDrsiJWJxgumYcoGZPoUharxY';
+const API_KEY = 'xai-KLnM08905tNVtOdTKGh72V68NvGsDbBftdzLGNJ2VLDywEVCqeVqbXX4dlQlzqqeKdCTCZlp4DN4TY7M';
 const API_URL = 'https://api.x.ai/v1/chat/completions';
-const MODEL = 'grok-4-1-fast-reasoning';  // Актуальная мощная модель (январь 2026)
+const MODEL = 'grok-4-1-fast-reasoning';  // ← если ошибка 403/404, попробуй 'grok-4' или 'grok-beta'
 
 let messages = [
   {
     role: "system",
-    content: "Ты Grok — честный, остроумный и максимально полезный ИИ от xAI. Отвечай кратко, по делу, с лёгким сарказмом когда уместно. Не льсти, не юли."
+    content: "Ты Grok — честный, остроумный и максимально полезный ИИ от xAI. Отвечай кратко, по делу, с лёгким сарказмом когда уместно."
   }
 ];
 
