@@ -8,11 +8,10 @@
   <style>
     :root {
       --bg: #000;
-      --text: #e0e0e0;
+      --text: #fff;
       --primary: #6750a4;
-      --on-primary: #ffffff;
-      --surface: #121212;
-      --border: #333;
+      --surface: #111;
+      --border: #222;
     }
 
     body {
@@ -22,6 +21,7 @@
       color: var(--text);
       font-family: system-ui, sans-serif;
       overflow: hidden;
+      touch-action: manipulation;
     }
 
     #welcome {
@@ -37,48 +37,40 @@
       z-index: 100;
     }
 
-    #welcome.hidden {
-      display: none;
-    }
+    #welcome.hidden { display: none; }
 
-    h1 { font-size: 2.8rem; margin-bottom: 20px; }
+    h1 { font-size: 2.8rem; margin-bottom: 24px; color: var(--primary); }
     #startBtn {
-      padding: 16px 60px;
-      font-size: 1.3rem;
+      padding: 16px 64px;
+      font-size: 1.4rem;
       background: var(--primary);
       color: white;
       border: none;
       border-radius: 999px;
       cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      touch-action: manipulation;
     }
 
-    #main {
-      display: none;
-      height: 100vh;
-      flex-direction: column;
-    }
+    #main { display: none; height: 100vh; flex-direction: column; }
 
     header {
       height: 64px;
-      background: #111;
+      background: #0a0a0a;
       display: flex;
       align-items: center;
       padding: 0 16px;
       border-bottom: 1px solid var(--border);
     }
 
-    .title {
-      font-size: 1.3rem;
-      font-weight: 600;
-      flex: 1;
-    }
+    .title { font-size: 1.3rem; font-weight: 600; flex: 1; }
 
     .icon-btn {
       width: 48px;
       height: 48px;
       background: none;
       border: none;
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       color: #aaa;
       cursor: pointer;
     }
@@ -100,7 +92,7 @@
     }
 
     .user { align-self: flex-end; background: var(--primary); color: white; }
-    .ai { align-self: flex-start; background: #222; color: white; }
+    .ai   { align-self: flex-start; background: #222; color: white; }
 
     .file-msg {
       align-self: flex-end;
@@ -117,6 +109,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      border-top: 1px solid var(--border);
     }
 
     #input {
@@ -144,13 +137,13 @@
 
   <div id="welcome">
     <h1>Neural AI</h1>
-    <p style="font-size:1.3rem; margin:20px 0;">Нажми ниже, чтобы начать</p>
+    <p style="font-size:1.3rem; margin:24px 0;">Нажми ниже</p>
     <button id="startBtn">Начать общение</button>
   </div>
 
   <div id="main">
     <header>
-      <div class="title" id="modelTitle">Groq · Llama 3.3 70B</div>
+      <div class="title" id="modelTitle">Groq · Llama 3.3</div>
       <button class="icon-btn" id="modelBtn">⚙️</button>
     </header>
 
@@ -168,14 +161,22 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-// Запуск
+// Приветствие
+const greetings = [
+  "Привет! Готов отвечать 😏",
+  "Йо! Давай пообщаемся 🔥",
+  "Здравствуй! Задавай вопросы 🚀"
+];
+document.getElementById("greeting").textContent = greetings[Math.floor(Math.random() * greetings.length)];
+
+// Запуск приложения
 document.getElementById("startBtn").addEventListener('pointerdown', e => {
   e.preventDefault();
   document.getElementById("welcome").classList.add("hidden");
   setTimeout(() => {
     document.getElementById("welcome").style.display = "none";
     document.getElementById("main").style.display = "flex";
-    addMessage("Привет! Я Grok на Groq. Прикрепи файл или пиши текст 🚀", false);
+    addMessage("Привет! Я Grok. Пиши текст или прикрепи файл 📎", false);
     document.getElementById("input").focus();
   }, 300);
 });
@@ -185,10 +186,10 @@ let currentModel = 'llama-3.3-70b-versatile';
 const modelTitle = document.getElementById("modelTitle");
 
 const models = [
-  {id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B'},
-  {id: 'mixtral-8x22b-32768', name: 'Mixtral 8x22B'},
-  {id: 'gemma2-9b-it', name: 'Gemma 2 9B'},
-  {id: 'qwen-2.5-72b-instruct', name: 'Qwen 2.5 72B'}
+  { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B' },
+  { id: 'mixtral-8x22b-32768',     name: 'Mixtral 8x22B' },
+  { id: 'gemma2-9b-it',            name: 'Gemma 2 9B' },
+  { id: 'qwen-2.5-72b-instruct',   name: 'Qwen 2.5 72B' }
 ];
 
 // Смена модели
@@ -198,7 +199,7 @@ document.getElementById("modelBtn").onclick = () => {
     id: m.id
   }));
 
-  buttons.push({text: 'Отмена', id: 'cancel', type: 'destructive'});
+  buttons.push({ text: 'Отмена', id: 'cancel', type: 'destructive' });
 
   tg.showPopup({
     title: 'Выбери модель',
@@ -207,19 +208,19 @@ document.getElementById("modelBtn").onclick = () => {
     if (btn.id === 'cancel') return;
     currentModel = btn.id;
     modelTitle.textContent = `Groq · ${models.find(m => m.id === currentModel).name}`;
-    addMessage(`Переключаюсь на ${models.find(m => m.id === currentModel).name}...`, false);
+    addMessage(`Переключаюсь на ${models.find(m => m.id === currentModel).name}`, false);
   });
 };
 
-// Загрузка файлов
+// Прикрепление файлов
 document.getElementById("attachBtn").onclick = () => {
   tg.showPopup({
     title: 'Прикрепить',
     buttons: [
-      {text: 'Фото/Видео', id: 'photo'},
-      {text: 'Документ', id: 'document'},
-      {text: 'Голосовое', id: 'voice'},
-      {text: 'Отмена', id: 'cancel', type: 'destructive'}
+      { text: 'Фото/Видео', id: 'photo' },
+      { text: 'Документ',   id: 'document' },
+      { text: 'Голосовое',  id: 'voice' },
+      { text: 'Отмена',     id: 'cancel', type: 'destructive' }
     ]
   }, btnId => {
     if (btnId === 'cancel') return;
