@@ -280,11 +280,11 @@ if (localStorage.getItem("theme") === "light") {
 themeToggle.onclick = toggleTheme;
 
 // ──────────────────────────────────────────────
-//     ОСНОВНАЯ ЛОГИКА — Groq API (бесплатный tier)
+//     ОСНОВНАЯ ЛОГИКА — Groq API
 // ──────────────────────────────────────────────
 const GROQ_API_KEY = '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';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const MODEL = 'llama-3.3-70b-versatile';  // очень хорошая и быстрая модель
+const MODEL = 'llama-3.3-70b-versatile';
 
 let messages = [
   {
