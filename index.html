@@ -17,6 +17,7 @@
       --input-bg: #121212;
       --border: rgba(255,255,255,0.08);
     }
+
     [data-theme="light"] {
       --bg: #f0f0f5;
       --chat-bg: #ffffff;
@@ -28,6 +29,7 @@
       --input-bg: #f0f0f5;
       --border: rgba(0,0,0,0.08);
     }
+
     * { margin:0; padding:0; box-sizing:border-box; user-select: none; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -37,6 +39,7 @@
       overflow: hidden;
       touch-action: manipulation;
     }
+
     #welcome {
       position: fixed;
       inset: 0;
@@ -51,9 +54,12 @@
       z-index: 100;
       pointer-events: auto;
     }
+
     #welcome.hidden { opacity: 0; pointer-events: none; }
+
     .welcome-title { font-size: 38px; font-weight: 700; margin-bottom: 12px; }
     .welcome-subtitle { font-size: 18px; color: var(--text-secondary); max-width: 320px; line-height: 1.4; }
+
     .start-btn {
       margin-top: 40px;
       padding: 16px 48px;
@@ -67,6 +73,7 @@
       touch-action: manipulation;
       pointer-events: auto;
     }
+
     .header {
       position: fixed;
       top: 0; left: 0; right: 0;
@@ -79,21 +86,25 @@
       padding: 0 16px;
       z-index: 10;
     }
+
     .avatar {
       width: 40px; height: 40px;
       border-radius: 50%;
       background: linear-gradient(135deg, #667eea, #764ba2);
       margin-right: 12px;
     }
+
     .chat-info { flex: 1; }
     .chat-name { font-weight: 600; font-size: 17px; }
     .chat-status { font-size: 13px; color: var(--text-secondary); }
+
     .theme-btn {
       background: none; border: none;
       font-size: 24px; cursor: pointer;
       color: var(--text-secondary);
       padding: 8px;
     }
+
     .chat-container {
       height: 100vh;
       padding: 76px 12px 80px;
@@ -103,6 +114,7 @@
       flex-direction: column;
       gap: 8px;
     }
+
     .message {
       max-width: 78%;
       padding: 10px 14px;
@@ -110,18 +122,21 @@
       font-size: 15.5px;
       line-height: 1.38;
     }
+
     .message.user {
       align-self: flex-end;
       background: var(--bubble-user);
       color: white;
       border-bottom-right-radius: 4px;
     }
+
     .message.ai {
       align-self: flex-start;
       background: var(--bubble-ai);
       color: var(--text);
       border-bottom-left-radius: 4px;
     }
+
     .typing {
       align-self: flex-start;
       color: var(--text-secondary);
@@ -129,6 +144,7 @@
       font-style: italic;
       font-size: 14px;
     }
+
     .input-wrapper {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -137,6 +153,7 @@
       border-top: 1px solid var(--border);
       backdrop-filter: blur(10px);
     }
+
     .input-container {
       display: flex;
       align-items: center;
@@ -145,6 +162,7 @@
       border-radius: 26px;
       padding: 8px 12px;
     }
+
     #input {
       flex: 1;
       background: transparent;
@@ -154,7 +172,9 @@
       outline: none;
       padding: 8px 0;
     }
+
     #input::placeholder { color: var(--text-secondary); }
+
     .send-btn {
       width: 40px; height: 40px;
       border-radius: 50%;
@@ -166,6 +186,7 @@
       align-items: center;
       justify-content: center;
     }
+
     .send-btn:disabled { opacity: 0.4; }
   </style>
 </head>
@@ -214,33 +235,26 @@ if (tg) {
   tg.expand();
 }
 
-// Запуск чата (используем pointerdown + click для надёжности)
+// Запуск чата
 const welcome = document.getElementById("welcome");
 const startBtn = document.getElementById("startBtn");
-const chat = document.getElementById("chat");
+const chatContainer = document.getElementById("chat");
 const inputWrapper = document.getElementById("inputWrapper");
 
-function startChat() {
+startBtn.addEventListener('click', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+
   welcome.classList.add("hidden");
+
   setTimeout(() => {
     welcome.style.display = "none";
-    chat.style.display = "flex";
+    chatContainer.style.display = "flex";
     inputWrapper.style.display = "block";
-    addMessage("Привет! Я на Groq через прокси. Задавай любые вопросы 🚀", false);
+    
+    addMessage("Привет! Я на Groq. Задавай любые вопросы 🚀", false);
     document.getElementById("input").focus();
-  }, 600);
-}
-
-startBtn.addEventListener('pointerdown', e => {
-  e.preventDefault();
-  e.stopPropagation();
-  startChat();
-}, { passive: false });
-
-startBtn.addEventListener('click', e => {
-  e.preventDefault();
-  e.stopPropagation();
-  startChat();
+  }, 700);
 });
 
 // Тема
@@ -248,9 +262,15 @@ const body = document.body;
 const themeToggle = document.getElementById("themeToggle");
 
 function toggleTheme() {
-  body.dataset.theme = body.dataset.theme === "light" ? "" : "light";
-  themeToggle.textContent = body.dataset.theme === "light" ? "🌙" : "☀️";
-  localStorage.setItem("theme", body.dataset.theme);
+  if (body.dataset.theme === "light") {
+    body.dataset.theme = "";
+    themeToggle.textContent = "☀️";
+    localStorage.setItem("theme", "dark");
+  } else {
+    body.dataset.theme = "light";
+    themeToggle.textContent = "🌙";
+    localStorage.setItem("theme", "light");
+  }
 }
 
 if (localStorage.getItem("theme") === "light") {
@@ -260,28 +280,11 @@ if (localStorage.getItem("theme") === "light") {
 themeToggle.onclick = toggleTheme;
 
 // ──────────────────────────────────────────────
-// Прокси + смена IP (через публичные сервисы)
-// ──────────────────────────────────────────────
-const PROXIES = [
-  'https://api.allorigins.win/raw?url=',
-  'https://corsproxy.io/?',
-  'https://thingproxy.freeboard.io/fetch/'
-];
-
-let proxyIndex = 0; // меняем прокси при каждом запросе
-
-function getNextProxy(url) {
-  const proxy = PROXIES[proxyIndex % PROXIES.length];
-  proxyIndex++;
-  return proxy + encodeURIComponent(url);
-}
-
-// ──────────────────────────────────────────────
-// Groq API через прокси
+//     ОСНОВНАЯ ЛОГИКА — Groq API (бесплатный tier)
 // ──────────────────────────────────────────────
 const GROQ_API_KEY = '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';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const MODEL = 'llama-3.3-70b-versatile';
+const MODEL = 'llama-3.3-70b-versatile';  // очень хорошая и быстрая модель
 
 let messages = [
   {
@@ -321,15 +324,11 @@ async function send() {
   try {
     messages.push({ role: "user", content: text });
 
-    // Меняем прокси каждый раз
-    const proxyUrl = getNextProxy(GROQ_API_URL);
-
-    const res = await fetch(proxyUrl, {
+    const res = await fetch(GROQ_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${GROQ_API_KEY}`,
-        "Origin": "" // убираем Origin, чтобы прокси не ругался
+        "Authorization": `Bearer ${GROQ_API_KEY}`
       },
       body: JSON.stringify({
         model: MODEL,
@@ -371,3 +370,4 @@ input.addEventListener("keypress", e => {
 </script>
 </body>
 </html>
+
