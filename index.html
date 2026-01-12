@@ -3,27 +3,40 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>Neural AI</title>
+  <title>Grok AI Чат</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
       --bg: #000;
+      --chat-bg: #000;
       --text: #e0e0e0;
-      --primary: #6750a4;
-      --on-primary: #ffffff;
-      --surface: #121212;
-      --border: #333;
+      --text-secondary: #9e9ea0;
+      --bubble-user: #2481cc;
+      --bubble-ai: #2b2b30;
+      --header-bg: rgba(20,20,25,0.85);
+      --input-bg: #121212;
+      --border: rgba(255,255,255,0.08);
     }
-
+    [data-theme="light"] {
+      --bg: #f0f0f5;
+      --chat-bg: #ffffff;
+      --text: #000;
+      --text-secondary: #666;
+      --bubble-user: #007aff;
+      --bubble-ai: #e5e5ea;
+      --header-bg: rgba(255,255,255,0.92);
+      --input-bg: #f0f0f5;
+      --border: rgba(0,0,0,0.08);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; user-select: none; }
     body {
-      margin: 0;
-      height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
-      font-family: system-ui, sans-serif;
+      height: 100vh;
       overflow: hidden;
+      touch-action: manipulation;
     }
-
     #welcome {
       position: fixed;
       inset: 0;
@@ -33,227 +46,266 @@
       justify-content: center;
       align-items: center;
       text-align: center;
-      padding: 20px;
+      padding: 40px 24px;
+      transition: opacity 0.7s ease;
       z-index: 100;
+      pointer-events: auto;
     }
-
-    #welcome.hidden {
-      display: none;
-    }
-
-    h1 { font-size: 2.8rem; margin-bottom: 20px; }
-    #startBtn {
-      padding: 16px 60px;
-      font-size: 1.3rem;
-      background: var(--primary);
+    #welcome.hidden { opacity: 0; pointer-events: none; }
+    .welcome-title { font-size: 38px; font-weight: 700; margin-bottom: 12px; }
+    .welcome-subtitle { font-size: 18px; color: var(--text-secondary); max-width: 320px; line-height: 1.4; }
+    .start-btn {
+      margin-top: 40px;
+      padding: 16px 48px;
+      font-size: 18px;
+      font-weight: 600;
+      background: var(--bubble-user);
       color: white;
       border: none;
-      border-radius: 999px;
+      border-radius: 28px;
       cursor: pointer;
+      touch-action: manipulation;
+      pointer-events: auto;
     }
-
-    #main {
-      display: none;
-      height: 100vh;
-      flex-direction: column;
-    }
-
-    header {
+    .header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
       height: 64px;
-      background: #111;
+      background: var(--header-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       padding: 0 16px;
-      border-bottom: 1px solid var(--border);
+      z-index: 10;
     }
-
-    .title {
-      font-size: 1.3rem;
-      font-weight: 600;
-      flex: 1;
+    .avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      margin-right: 12px;
     }
-
-    .icon-btn {
-      width: 48px;
-      height: 48px;
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      color: #aaa;
-      cursor: pointer;
+    .chat-info { flex: 1; }
+    .chat-name { font-weight: 600; font-size: 17px; }
+    .chat-status { font-size: 13px; color: var(--text-secondary); }
+    .theme-btn {
+      background: none; border: none;
+      font-size: 24px; cursor: pointer;
+      color: var(--text-secondary);
+      padding: 8px;
     }
-
-    #messages {
-      flex: 1;
-      padding: 16px;
+    .chat-container {
+      height: 100vh;
+      padding: 76px 12px 80px;
       overflow-y: auto;
+      background: var(--chat-bg);
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 8px;
     }
-
-    .msg {
-      max-width: 80%;
-      padding: 12px 16px;
+    .message {
+      max-width: 78%;
+      padding: 10px 14px;
       border-radius: 18px;
-      font-size: 1.05rem;
+      font-size: 15.5px;
+      line-height: 1.38;
     }
-
-    .user { align-self: flex-end; background: var(--primary); color: white; }
-    .ai { align-self: flex-start; background: #222; color: white; }
-
-    .file-msg {
+    .message.user {
       align-self: flex-end;
-      background: #222;
-      padding: 12px;
-      border-radius: 12px;
-      max-width: 80%;
-      margin: 8px 0;
+      background: var(--bubble-user);
+      color: white;
+      border-bottom-right-radius: 4px;
     }
-
-    .input-area {
-      padding: 16px;
-      background: #111;
+    .message.ai {
+      align-self: flex-start;
+      background: var(--bubble-ai);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
+    .typing {
+      align-self: flex-start;
+      color: var(--text-secondary);
+      padding: 12px 16px;
+      font-style: italic;
+      font-size: 14px;
+    }
+    .input-wrapper {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      padding: 12px 16px;
+      background: var(--input-bg);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+    .input-container {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
+      background: var(--chat-bg);
+      border-radius: 26px;
+      padding: 8px 12px;
     }
-
     #input {
       flex: 1;
-      padding: 14px 18px;
-      border-radius: 999px;
+      background: transparent;
       border: none;
-      background: #222;
-      color: white;
-      font-size: 1.05rem;
+      color: var(--text);
+      font-size: 16px;
+      outline: none;
+      padding: 8px 0;
     }
-
-    #sendBtn {
-      width: 56px;
-      height: 56px;
+    #input::placeholder { color: var(--text-secondary); }
+    .send-btn {
+      width: 40px; height: 40px;
       border-radius: 50%;
-      background: var(--primary);
+      background: var(--bubble-user);
       color: white;
       border: none;
-      font-size: 1.6rem;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
+    .send-btn:disabled { opacity: 0.4; }
   </style>
 </head>
 <body>
 
   <div id="welcome">
-    <h1>Neural AI</h1>
-    <p style="font-size:1.3rem; margin:20px 0;">Нажми ниже, чтобы начать</p>
-    <button id="startBtn">Начать общение</button>
+    <div class="welcome-title">Привет!</div>
+    <div class="welcome-subtitle" id="greeting"></div>
+    <button class="start-btn" id="startBtn">Начать общение</button>
   </div>
 
-  <div id="main">
-    <header>
-      <div class="title" id="modelTitle">Groq · Llama 3.3 70B</div>
-      <button class="icon-btn" id="modelBtn">⚙️</button>
-    </header>
+  <div class="header">
+    <div class="avatar"></div>
+    <div class="chat-info">
+      <div class="chat-name">Grok AI</div>
+      <div class="chat-status">онлайн</div>
+    </div>
+    <button class="theme-btn" id="themeToggle">☀️</button>
+  </div>
 
-    <div id="messages"></div>
+  <div class="chat-container" id="chat" style="display:none;"></div>
 
-    <div class="input-area">
-      <button class="icon-btn" id="attachBtn">📎</button>
-      <input type="text" id="input" placeholder="Напиши сообщение..." autocomplete="off"/>
-      <button id="sendBtn">➤</button>
+  <div class="input-wrapper" id="inputWrapper" style="display:none;">
+    <div class="input-container">
+      <input type="text" id="input" placeholder="Сообщение..." autocomplete="off"/>
+      <button id="sendBtn" class="send-btn">➤</button>
     </div>
   </div>
 
 <script>
-const tg = window.Telegram.WebApp;
-tg.ready();
-tg.expand();
+// Случайные приветствия
+const greetings = [
+  "Готов ответить максимально честно 😏",
+  "Привет! Что у тебя на уме сегодня?",
+  "Йо! Давай интересный разговор 🔥",
+  "Здравствуй! Чем помогу?",
+  "О, ты снова здесь — задавай вопросы!",
+  "Привет из Groq! Без воды, только суть"
+];
+document.getElementById("greeting").textContent = greetings[Math.floor(Math.random() * greetings.length)];
 
-// Запуск
-document.getElementById("startBtn").addEventListener('pointerdown', e => {
-  e.preventDefault();
-  document.getElementById("welcome").classList.add("hidden");
+// Telegram WebApp
+const tg = window.Telegram?.WebApp;
+if (tg) {
+  tg.ready();
+  tg.expand();
+}
+
+// Запуск чата (используем pointerdown + click для надёжности)
+const welcome = document.getElementById("welcome");
+const startBtn = document.getElementById("startBtn");
+const chat = document.getElementById("chat");
+const inputWrapper = document.getElementById("inputWrapper");
+
+function startChat() {
+  welcome.classList.add("hidden");
   setTimeout(() => {
-    document.getElementById("welcome").style.display = "none";
-    document.getElementById("main").style.display = "flex";
-    addMessage("Привет! Я Grok на Groq. Прикрепи файл или пиши текст 🚀", false);
+    welcome.style.display = "none";
+    chat.style.display = "flex";
+    inputWrapper.style.display = "block";
+    addMessage("Привет! Я на Groq через прокси. Задавай любые вопросы 🚀", false);
     document.getElementById("input").focus();
-  }, 300);
+  }, 600);
+}
+
+startBtn.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  startChat();
+}, { passive: false });
+
+startBtn.addEventListener('click', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  startChat();
 });
 
-// Текущая модель
-let currentModel = 'llama-3.3-70b-versatile';
-const modelTitle = document.getElementById("modelTitle");
+// Тема
+const body = document.body;
+const themeToggle = document.getElementById("themeToggle");
 
-const models = [
-  {id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B'},
-  {id: 'mixtral-8x22b-32768', name: 'Mixtral 8x22B'},
-  {id: 'gemma2-9b-it', name: 'Gemma 2 9B'},
-  {id: 'qwen-2.5-72b-instruct', name: 'Qwen 2.5 72B'}
+function toggleTheme() {
+  body.dataset.theme = body.dataset.theme === "light" ? "" : "light";
+  themeToggle.textContent = body.dataset.theme === "light" ? "🌙" : "☀️";
+  localStorage.setItem("theme", body.dataset.theme);
+}
+
+if (localStorage.getItem("theme") === "light") {
+  body.dataset.theme = "light";
+  themeToggle.textContent = "🌙";
+}
+themeToggle.onclick = toggleTheme;
+
+// ──────────────────────────────────────────────
+// Прокси + смена IP (через публичные сервисы)
+// ──────────────────────────────────────────────
+const PROXIES = [
+  'https://api.allorigins.win/raw?url=',
+  'https://corsproxy.io/?',
+  'https://thingproxy.freeboard.io/fetch/'
 ];
 
-// Смена модели
-document.getElementById("modelBtn").onclick = () => {
-  const buttons = models.map(m => ({
-    text: m.name + (m.id === currentModel ? ' ✓' : ''),
-    id: m.id
-  }));
+let proxyIndex = 0; // меняем прокси при каждом запросе
 
-  buttons.push({text: 'Отмена', id: 'cancel', type: 'destructive'});
+function getNextProxy(url) {
+  const proxy = PROXIES[proxyIndex % PROXIES.length];
+  proxyIndex++;
+  return proxy + encodeURIComponent(url);
+}
 
-  tg.showPopup({
-    title: 'Выбери модель',
-    buttons
-  }, btn => {
-    if (btn.id === 'cancel') return;
-    currentModel = btn.id;
-    modelTitle.textContent = `Groq · ${models.find(m => m.id === currentModel).name}`;
-    addMessage(`Переключаюсь на ${models.find(m => m.id === currentModel).name}...`, false);
-  });
-};
+// ──────────────────────────────────────────────
+// Groq API через прокси
+// ──────────────────────────────────────────────
+const GROQ_API_KEY = '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';
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const MODEL = 'llama-3.3-70b-versatile';
 
-// Загрузка файлов
-document.getElementById("attachBtn").onclick = () => {
-  tg.showPopup({
-    title: 'Прикрепить',
-    buttons: [
-      {text: 'Фото/Видео', id: 'photo'},
-      {text: 'Документ', id: 'document'},
-      {text: 'Голосовое', id: 'voice'},
-      {text: 'Отмена', id: 'cancel', type: 'destructive'}
-    ]
-  }, btnId => {
-    if (btnId === 'cancel') return;
-
-    tg.requestFile({
-      type: btnId === 'photo' ? 'photo' :
-            btnId === 'document' ? 'document' :
-            btnId === 'voice' ? 'voice' : 'any'
-    }, file => {
-      if (!file) return;
-
-      const div = document.createElement('div');
-      div.className = 'file-msg';
-      div.innerHTML = `
-        <strong>Файл:</strong> ${file.file_name || 'Без имени'}<br>
-        Размер: ${(file.file_size / 1024).toFixed(1)} KB<br>
-        Тип: ${file.mime_type || 'неизвестно'}
-      `;
-      document.getElementById("messages").appendChild(div);
-      document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
-    });
-  });
-};
-
-// Отправка текста
-const input = document.getElementById("input");
-const sendBtn = document.getElementById("sendBtn");
+let messages = [
+  {
+    role: "system",
+    content: "Ты Grok — честный, остроумный и максимально полезный ИИ. Отвечай кратко, по делу, с лёгким сарказмом когда уместно."
+  }
+];
 
 function addMessage(text, isUser = false) {
   const div = document.createElement("div");
-  div.className = `msg ${isUser ? 'user' : 'ai'}`;
+  div.className = `message ${isUser ? 'user' : 'ai'}`;
   div.textContent = text;
-  document.getElementById("messages").appendChild(div);
-  document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function showTyping() {
+  const t = document.createElement("div");
+  t.className = "typing";
+  t.textContent = "печатает...";
+  t.id = "typing";
+  chat.appendChild(t);
+  chat.scrollTop = chat.scrollHeight;
+  return t;
 }
 
 async function send() {
@@ -264,32 +316,44 @@ async function send() {
   input.value = "";
   sendBtn.disabled = true;
 
+  const typing = showTyping();
+
   try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    messages.push({ role: "user", content: text });
+
+    // Меняем прокси каждый раз
+    const proxyUrl = getNextProxy(GROQ_API_URL);
+
+    const res = await fetch(proxyUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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"
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+        "Origin": "" // убираем Origin, чтобы прокси не ругался
       },
       body: JSON.stringify({
-        model: currentModel,
-        messages: [
-          { role: "system", content: "Ты Grok — честный и полезный ИИ." },
-          { role: "user", content: text }
-        ],
-        temperature: 0.7,
-        max_tokens: 1024
+        model: MODEL,
+        messages: messages,
+        temperature: 0.75,
+        max_tokens: 2048
       })
     });
 
-    if (!res.ok) throw new Error("Ошибка: " + res.status);
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Groq API: ${res.status} — ${errText}`);
+    }
 
     const data = await res.json();
-    const answer = data.choices?.[0]?.message?.content?.trim() || "...";
+    const answer = data.choices?.[0]?.message?.content?.trim() || "…";
 
-    addMessage(answer, false);
+    messages.push({ role: "assistant", content: answer });
+
+    typing.remove();
+    addMessage(answer);
 
   } catch (e) {
+    typing.remove();
     addMessage("⚠️ " + e.message, false);
   }
 
